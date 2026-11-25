@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace StingerReadded
@@ -12,6 +13,11 @@ namespace StingerReadded
         internal const uint HighLevelMeleeAchievement = 7222u;
         internal const float SidePowerHitDamage = 1.8f;
 
+        static int before;
+        static PowerHit side;
+        static GameAchievement achievement;
+        static string orb;
+
         internal static string Refusal()
         {
             if (Plat.IsServer()) return "This is the client half: a server runs CGNik's StingerReadded and CustomSkillsAPI instead.";
@@ -24,7 +30,8 @@ namespace StingerReadded
         {
             if (Plat.As<PowerHit>(Plat.Skill(PowerHitHash)) == null) return "Power Hit (" + PowerHitHash + ")";
             if (Plat.As<PowerStinger>(Plat.Skill(PowerStingerHash)) == null) return "Power Stinger (" + PowerStingerHash + ")";
-            if (ProfessionSkillTree.GetProfessionTree(ProgressionPath.Melee) == null) return "the Melee skill tree";
+            if (ProfessionSkillTree.GetProfessionTree(ProgressionPath.Melee) == null) return "Melee skill tree";
+            if (Plat.Skill(SidePowerHitHash) != null) return "free skill hash " + SidePowerHitHash + " (something else took it)";
             return null;
         }
 
@@ -32,38 +39,52 @@ namespace StingerReadded
         {
             PowerHit powerHit = Plat.As<PowerHit>(Plat.Skill(PowerHitHash));
             PowerStinger powerStinger = Plat.As<PowerStinger>(Plat.Skill(PowerStingerHash));
-            ProfessionSkillTree melee = ProfessionSkillTree.GetProfessionTree(ProgressionPath.Melee);
-            int before = melee.Slots.Count;
-            if (Plat.Skill(SidePowerHitHash) != null) throw new System.InvalidOperationException("the game already has a skill " + SidePowerHitHash);
+            before = ProfessionSkillTree.GetProfessionTree(ProgressionPath.Melee).Slots.Count;
 
-            HandOnSidePatch(powerStinger, powerHit);
-
-            PowerHit side = Plat.Copy(powerHit);
+            side = Plat.Copy(powerHit);
             side.name = "Side Power Hit";
             Plat.SetHash(side, SidePowerHitHash);
             Plat.SetDamage(side, SidePowerHitDamage);
             Plat.SetImpactChannel(side, Plat.ImpactChannel(powerHit));
             Plat.SetInput(side, Plat.Input(powerStinger));
             Plat.CopyHitEffects(side, powerHit);
-            Skills.AddProfessionSkill(side, Plat.Glyph(powerStinger, 0), Plat.Glyph(powerHit, 1));
-            Skills.AddProgressionSlot(side, "Side Power Hit", 1u, new uint[] { SidePowerHitNeeds }, SidePowerHitHash, new Vector3(0f, 0.1f, 0.1f), ProgressionPath.Melee, Icons.Get("SidePowerHitSlotIcon"));
 
-            GameAchievement achievement = Plat.As<GameAchievement>(Plat.Flag(HighLevelMeleeAchievement));
+            CustomSkillsAPI.Core.AddProfessionSkill(
+                side,
+                new Sprite[]
+                {
+                    Plat.Glyph(powerStinger, 0),
+                    Plat.Glyph(powerHit, 1)
+                }
+            );
+
+            CustomSkillsAPI.Core.AddProgressionSlot(
+                side,
+                "Side Power Hit",
+                1u,
+                new List<uint> { SidePowerHitNeeds },
+                SidePowerHitHash,
+                new Vector3(0f, 0.1f, 0.1f),
+                ProgressionPath.Melee,
+                Icons.Get("SidePowerHitSlotIcon")
+            );
+
+            achievement = Plat.As<GameAchievement>(Plat.Flag(HighLevelMeleeAchievement));
             if (achievement != null) Plat.SetAchievement(powerStinger, achievement);
             else Mod.Log.Warning("The game has no achievement " + HighLevelMeleeAchievement + ", Stinger keeps its own.");
-            string orb = ShowOrb(powerStinger);
 
-            Skills.AddProgressionSlot(powerStinger, "Power Stinger Readded", 1u, new uint[] { SidePowerHitHash }, StingerSlotHash, new Vector3(0f, 0.1f, 0.3f), ProgressionPath.Melee, Icons.Get("StingerSlotIcon"));
+            orb = ShowOrb(powerStinger);
 
-            Skills.Commit();
-            Report(melee, before, side, powerHit, powerStinger, achievement, orb);
-        }
-
-        static void HandOnSidePatch(PowerStinger stinger, PowerHit hit)
-        {
-            SkillInputStructure handOnSide = stinger.InputStructure;
-            SkillInputStructure raiseHand = hit.InputStructure;
-            Plat.CopyChargeSounds(handOnSide, raiseHand);
+            CustomSkillsAPI.Core.AddProgressionSlot(
+                powerStinger,
+                "Power Stinger Readded",
+                1u,
+                new List<uint> { SidePowerHitHash },
+                StingerSlotHash,
+                new Vector3(0f, 0.1f, 0.3f),
+                ProgressionPath.Melee,
+                Icons.Get("StingerSlotIcon")
+            );
         }
 
         static string ShowOrb(PowerStinger stinger)
@@ -85,8 +106,11 @@ namespace StingerReadded
             return part.name;
         }
 
-        static void Report(ProfessionSkillTree melee, int before, PowerHit side, PowerHit powerHit, PowerStinger stinger, GameAchievement achievement, string orb)
+        internal static void Report()
         {
+            ProfessionSkillTree melee = ProfessionSkillTree.GetProfessionTree(ProgressionPath.Melee);
+            PowerHit powerHit = Plat.As<PowerHit>(Plat.Skill(PowerHitHash));
+            PowerStinger stinger = Plat.As<PowerStinger>(Plat.Skill(PowerStingerHash));
             ProgressionSlot sideSlot, stingerSlot;
             bool hasSide = melee.GetSlot(SidePowerHitHash, out sideSlot);
             bool hasStinger = melee.GetSlot(StingerSlotHash, out stingerSlot);

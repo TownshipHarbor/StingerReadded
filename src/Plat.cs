@@ -14,7 +14,7 @@ namespace StingerReadded
 {
     static class Plat
     {
-        static readonly string[] OtherMods = { "StingerReadded", "CustomSkillsAPI" };
+        static readonly string[] OtherMods = { "StingerReadded" };
 
         internal const string Name = "Quest";
         internal const string OrbPart = "Orb android";
@@ -78,60 +78,11 @@ namespace StingerReadded
             return glyphs == null || index >= glyphs.Length ? null : glyphs[index];
         }
 
-        internal static void SetGlyphs(ProfessionSkill skill, Sprite first, Sprite second)
-        {
-            Il2CppSystem.Array made = Il2CppSystem.Array.CreateInstance(Il2CppType.Of<Sprite>(), 2);
-            Il2CppReferenceArray<Sprite> glyphs = new Il2CppReferenceArray<Sprite>(made.Pointer);
-            glyphs[0] = first;
-            glyphs[1] = second;
-            skill.practiceGlyphSprites = glyphs;
-        }
-
         internal static void SetAchievement(ProfessionSkill skill, GameAchievement achievement) { skill.targetAchievement = achievement; }
         internal static PooledObjectDefinition TargetDefinition(PowerStinger skill) { return skill.targetDefinition; }
         internal static PooledObject Prefab(PooledObjectDefinition definition) { return definition.prefab; }
         internal static TransformEvent ChargedSound(SkillInputStructure input) { return input == null ? null : input.chargedDefaultEffect; }
 
-        internal static void CopyChargeSounds(SkillInputStructure to, SkillInputStructure from)
-        {
-            to.chargedDefaultEffect = from.chargedDefaultEffect;
-            to.executedDefaultEffect = from.executedDefaultEffect;
-        }
-
-        internal static ProgressionSlot NewSlot(ProfessionSkillTree tree, ProfessionSkill skill)
-        {
-            GameList.List<ProgressionSlot> list = tree.Slots;
-            ProgressionSlot like = list != null && list.Count > 0 ? list[0] : null;
-            if (like == null) throw new InvalidOperationException("the " + tree.name + " tree has no slot to copy");
-            Il2CppSystem.Object copy = like.MemberwiseClone();
-            ProgressionSlot slot = copy == null ? null : copy.TryCast<ProgressionSlot>();
-            if (slot == null) throw new InvalidOperationException("could not copy a slot of the " + tree.name + " tree");
-            slot.Path = default(ProgressionPath);
-            slot.skill = skill;
-            slot.name = skill.name;
-            slot.cost = 1u;
-            slot.dependencies = new GameList.List<uint>();
-            slot.hash = 0u;
-            slot.indentLevel = -1;
-            slot.position = Vector3.zero;
-            slot.slotIcon = null;
-            slot.inheritSlots = new GameList.List<ProgressionSlot>();
-            return slot;
-        }
-
-        internal static void FillSlot(ProgressionSlot slot, string name, uint cost, uint[] dependencies, uint hash, Vector3 position, Texture2D icon)
-        {
-            GameList.List<uint> list = new GameList.List<uint>();
-            foreach (uint d in dependencies) list.Add(d);
-            slot.name = name;
-            slot.cost = cost;
-            slot.dependencies = list;
-            slot.hash = hash;
-            slot.position = position;
-            if (icon != null) slot.slotIcon = icon;
-        }
-
-        internal static void MapSlot(ProfessionSkillTree tree, ProgressionSlot slot) { tree.slotMap[slot.Hash] = slot; }
         internal static int InheritCount(ProgressionSlot slot) { return slot.inheritSlots == null ? 0 : slot.inheritSlots.Count; }
 
         internal static string Join(GameList.List<uint> list)
@@ -165,14 +116,6 @@ namespace StingerReadded
         {
             var items = Items<PlayerProgressFlag>();
             return items != null && items.ContainsKey(hash) ? items[hash] : null;
-        }
-
-        internal static bool Register(ProfessionSkill skill)
-        {
-            var items = Items<ProfessionSkill>();
-            if (items == null || items.Count == 0 || items.ContainsKey(skill.Hash)) return false;
-            items.Add(skill.Hash, skill);
-            return true;
         }
 
         internal static string OtherCopy()

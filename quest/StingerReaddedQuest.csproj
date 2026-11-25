@@ -4,7 +4,7 @@
     <Nullable>disable</Nullable>
     <AssemblyName>StingerReaddedQuest</AssemblyName>
     <RootNamespace>StingerReadded</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <DefineConstants>QUEST</DefineConstants>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -16,6 +16,7 @@
     <DebugSymbols>false</DebugSymbols>
     <LemonNet8 Condition="'$(LemonNet8)' == ''">..\lemon\net8</LemonNet8>
     <LemonProxies Condition="'$(LemonProxies)' == ''">..\lemon\Il2CppAssemblies</LemonProxies>
+    <SkillsApi Condition="'$(SkillsApi)' == ''">..\lib\CustomSkillsAPI.dll</SkillsApi>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\*.cs" />
@@ -23,5 +24,6 @@
     <EmbeddedResource Include="..\res\icons.bin" LogicalName="StingerReadded.icons.bin" />
     <Reference Include="$(LemonNet8)\MelonLoader.dll;$(LemonNet8)\0Harmony.dll;$(LemonNet8)\Il2CppInterop.Runtime.dll;$(LemonNet8)\Il2CppInterop.Common.dll" Private="false" />
     <Reference Include="$(LemonProxies)\*.dll" Private="false" />
+    <Reference Include="$(SkillsApi)" Private="false" />
   </ItemGroup>
 </Project>
